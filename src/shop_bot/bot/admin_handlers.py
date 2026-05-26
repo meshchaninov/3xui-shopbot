@@ -17,6 +17,7 @@ from shop_bot.data_manager import speedtest_runner
 from shop_bot.data_manager.database import (
     get_all_users,
     get_setting,
+    update_setting,
     get_user,
     get_keys_for_user,
     get_key_by_id,
@@ -2005,5 +2006,42 @@ def get_admin_router() -> Router:
             )
         except Exception as e:
             await message.answer(f"Ошибка: {e}")
+
+    # --- Установка стартового баланса для новых пользователей ---
+    class AdminSetStartBalance(StatesGroup):
+        waiting_for_amount = State()
+
+    @admin_router.callback_query(F.data == "admin_set_start_balance")
+    async def admin_set_start_balance_entry(callback: types.CallbackQuery, state: FSMContext):
+        if not is_admin(callback.from_user.id):
+            await callback.answer("У вас нет прав.", show_alert=True)
+            return
+        await callback.answer()
+        current = get_setting("start_balance") or "0"
+        await state.set_state(AdminSetStartBalance.waiting_for_amount)
+        await callback.message.edit_text(
+            f"💰 <b>Стартовый баланс</b>\n\n"
+            f"Текущее значение: <code>{current}</code> RUB\n\n"
+            f"Введите новое значение (число) или 0 чтобы отключить:",
+            reply_markup=keyboards.create_admin_cancel_keyboard()
+        )
+
+    @admin_router.message(AdminSetStartBalance.waiting_for_amount)
+    async def handle_start_balance_input(message: types.Message, state: FSMContext):
+        if not is_admin(message.from_user.id):
+            return
+        text = (message.text or "").strip()
+        try:
+            value = float(text)
+            if value < 0:
+                await message.answer("❌ Значение не может быть отрицательным")
+                return
+        except ValueError:
+            await message.answer("❌ Введите корректное число")
+            return
+        update_setting("start_balance", str(value))
+        await state.clear()
+        await message.answer(f"✅ Стартовый баланс установлен: <code>{value}</code> RUB")
+        await show_admin_menu(message)
 
     return admin_router

@@ -1155,10 +1155,19 @@ def register_user_if_not_exists(telegram_id: int, username: str, referrer_id):
             cursor.execute("SELECT referred_by FROM users WHERE telegram_id = ?", (telegram_id,))
             row = cursor.fetchone()
             if not row:
-                # Новый пользователь — сразу сохраняем возможного реферера
+                # Читаем start_balance из настроек
+                start_balance = 0.0
+                try:
+                    sb_str = get_setting("start_balance")
+                    if sb_str:
+                        start_balance = float(sb_str)
+                except (ValueError, TypeError):
+                    start_balance = 0.0
+
+                # Новый пользователь — сразу сохраняем возможного реферера и стартовый баланс
                 cursor.execute(
-                    "INSERT INTO users (telegram_id, username, registration_date, referred_by) VALUES (?, ?, ?, ?)",
-                    (telegram_id, username, datetime.now(), referrer_id)
+                    "INSERT INTO users (telegram_id, username, registration_date, referred_by, balance) VALUES (?, ?, ?, ?, ?)",
+                    (telegram_id, username, datetime.now(), referrer_id, start_balance)
                 )
             else:
                 # Пользователь уже есть — обновим username, и если есть реферер и поле пустое, допишем

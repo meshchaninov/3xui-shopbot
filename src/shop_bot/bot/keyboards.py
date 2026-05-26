@@ -24,9 +24,6 @@ def create_main_menu_keyboard(user_keys: list, trial_available: bool, is_admin: 
     keys_label_tpl = (get_setting("btn_my_keys") or "🔑 Мои ключи ({count})")
     builder.button(text=keys_label_tpl.replace("{count}", str(len(user_keys))), callback_data="manage_keys")
     builder.button(text=(get_setting("btn_buy_key") or "💳 Купить ключ"), callback_data="buy_new_key")
-    builder.button(text=(get_setting("btn_top_up") or "➕ Пополнить баланс"), callback_data="top_up_start")
-    builder.button(text=(get_setting("btn_referral") or "🤝 Реферальная программа"), callback_data="show_referral_program")
-    builder.button(text=(get_setting("btn_support") or "🆘 Поддержка"), callback_data="show_help")
     builder.button(text=(get_setting("btn_about") or "ℹ️ О проекте"), callback_data="show_about")
     builder.button(text=(get_setting("btn_howto") or "❓ Как использовать"), callback_data="howto_vless")
     if is_admin:
@@ -35,9 +32,8 @@ def create_main_menu_keyboard(user_keys: list, trial_available: bool, is_admin: 
     layout = [
         1 if trial_available and get_setting("trial_enabled") == "true" else 0,  # триал
         2,  # профиль + мои ключи
-        2,  # купить ключ + пополнить баланс
-        1,  # рефералка
-        2,  # поддержка + о проекте
+        1,  # купить ключ
+        1,  # о проекте
         1,  # как использовать
         1 if is_admin else 0,  # админка
     ]
@@ -52,13 +48,14 @@ def create_admin_menu_keyboard() -> InlineKeyboardMarkup:
     builder.button(text="🌍 Ключи на хосте", callback_data="admin_host_keys")
     builder.button(text="🎁 Выдать ключ", callback_data="admin_gift_key")
     builder.button(text="⚡ Тест скорости", callback_data="admin_speedtest")
+    builder.button(text="💰 Стартовый баланс", callback_data="admin_set_start_balance")
     builder.button(text="🗄 Бэкап БД", callback_data="admin_backup_db")
     builder.button(text="♻️ Восстановить БД", callback_data="admin_restore_db")
     builder.button(text="👮 Администраторы", callback_data="admin_admins_menu")
     builder.button(text="📢 Рассылка", callback_data="start_broadcast")
     builder.button(text="⬅️ Назад в меню", callback_data="back_to_main_menu")
     # 4 ряда по 2 кнопки (включая бэкап/восстановление), затем "Назад"
-    builder.adjust(2, 2, 2, 2, 1)
+    builder.adjust(2, 2, 2, 2, 2, 1)
     return builder.as_markup()
 
 def create_admins_menu_keyboard() -> InlineKeyboardMarkup:
@@ -423,8 +420,6 @@ def create_back_to_menu_keyboard() -> InlineKeyboardMarkup:
 
 def create_profile_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=(get_setting("btn_top_up") or "➕ Пополнить баланс"), callback_data="top_up_start")
-    builder.button(text=(get_setting("btn_referral") or "🤝 Реферальная программа"), callback_data="show_referral_program")
     builder.button(text=(get_setting("btn_back_to_menu") or "⬅️ Назад в меню"), callback_data="back_to_main_menu")
     builder.adjust(1)
     return builder.as_markup()
